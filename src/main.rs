@@ -16,6 +16,7 @@ fn main() {
             index_sub_command(&config, paths);
         }
         Some(VigSubCommands::Query { query }) => {
+            let query = query.join(" ");
             query_sub_command(&config, query);
         }
         None => {
@@ -34,18 +35,45 @@ pub struct VigArgs {
 
 #[derive(Subcommand)]
 enum VigSubCommands {
+    #[command(visible_alias = "i")]
     Index {
-        #[arg(short, long, value_name = "PATHS")]
+        #[arg(
+            value_name = "PATHS",
+            trailing_var_arg = true,
+            allow_hyphen_values = true,
+        )]
         paths: Vec<String>
     },
+    #[command(visible_alias = "q", disable_help_flag = true)]
     Query {
-        #[arg(short, long, value_name = "QUERY")]
-        query: String,
+        #[arg(
+            value_name = "QUERY",
+            trailing_var_arg = true,
+            allow_hyphen_values = true,
+        )]
+        query: Vec<String>,
     },
 }
 
 fn index_sub_command(config: &Configuration, paths: Vec<String>) {
-    let result = default_api::index_files(config, paths);
+    let canonical_paths = paths
+        .iter()
+        .map(|path| {
+            let path = std::path::Path::new(path);
+            let canonical_path = path.canonicalize();
+            match canonical_path {
+                Ok(canonical_path) => canonical_path.to_str().unwrap().to_string(),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    exit(1);
+                }
+            }
+        })
+        .collect::<Vec<_>>();
+    for path in &canonical_paths {
+        println!("{}", path);
+    }
+    let result = default_api::index_files(config, canonical_paths);
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
         match result.await {
