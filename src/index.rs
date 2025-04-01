@@ -1,14 +1,40 @@
-use crate::apis::configuration::Configuration;
 use crate::apis::default_api;
+use crate::config::api_config;
+use crate::ui;
+use crate::ui::format_error;
 use spinners::{Spinner, Spinners};
 use std::process::exit;
 use tokio::runtime::Runtime;
 
 pub fn dialog() {
-    println!("Indexing files...");
+    let selected = ui::select(
+        "Which files do you want to index?",
+        vec![
+            "This directory".to_string(),
+            "File or subdirectory".to_string(),
+            "Exit".to_string(),
+        ],
+    );
+    match selected {
+        0 => index_files(vec![".".to_string()]),
+        1 => {
+            let mut path = ui::read_line("Enter the name of the file or subdirectory to index:");
+            if path.is_empty() {
+                println!("{}", format_error("Error: No file or subdirectory provided."));
+                exit(1);
+            }
+            path = path.trim().parse().unwrap();
+            if !path.starts_with("./") {
+                path = format!("./{}", path);
+            }
+            index_files(vec![path]);
+        }
+        2 => exit(0),
+        _ => unreachable!(),
+    }
 }
 
-pub fn index_files(config: &Configuration, paths: Vec<String>) {
+pub fn index_files(paths: Vec<String>) {
     let canonical_paths = paths
         .iter()
         .map(|path| {
@@ -17,7 +43,7 @@ pub fn index_files(config: &Configuration, paths: Vec<String>) {
             match canonical_path {
                 Ok(canonical_path) => canonical_path.to_str().unwrap().to_string(),
                 Err(e) => {
-                    eprintln!("Error: {}", e);
+                    println!("{}", format_error(&format!("Error: {}", e)));
                     exit(1);
                 }
             }
@@ -27,7 +53,8 @@ pub fn index_files(config: &Configuration, paths: Vec<String>) {
         println!("{}", path);
     }
     let mut spinner = Spinner::new(Spinners::Dots, "Indexing files".into());
-    let result = default_api::index_files(config, canonical_paths);
+    let config = api_config();
+    let result = default_api::index_files(&config, canonical_paths);
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
         match result.await {

@@ -1,16 +1,24 @@
-use crate::apis::configuration::Configuration;
 use crate::apis::default_api;
-use crate::models;
+use crate::config::api_config;
+use crate::ui::format_error;
+use crate::{models, ui};
 use spinners::{Spinner, Spinners};
+use std::process::exit;
 use tokio::runtime::Runtime;
 
 pub fn dialog() {
-    println!("Querying files...");
+    let query = ui::read_line("Enter the query:");
+    if query.is_empty() {
+        format_error("No query provided.");
+        exit(1);
+    }
+    query_files(query);
 }
 
-pub fn query_files(config: &Configuration, query: String) {
+pub fn query_files(query: String) {
     let mut spinner = Spinner::new(Spinners::Dots, "Querying files".into());
-    let result = default_api::search_files(config, &*query, Option::from(0), Option::from(10));
+    let config = api_config();
+    let result = default_api::search_files(&config, &*query, Option::from(0), Option::from(10));
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
         match result.await {
@@ -20,7 +28,7 @@ pub fn query_files(config: &Configuration, query: String) {
                 show_query_results(results);
             }
             Err(e) => {
-                spinner.stop_with_message(format!("Error querying files: {}", e));
+                spinner.stop_with_message(format_error(format!("Error querying files: {}", e).as_str()));
             }
         }
     });
@@ -28,7 +36,7 @@ pub fn query_files(config: &Configuration, query: String) {
 
 fn show_query_results(results: Vec<models::SearchResult>) {
     if results.is_empty() {
-        println!("No results found.");
+        println!("{}", format_error("No results found."));
         return;
     }
 
@@ -41,7 +49,11 @@ fn show_query_results(results: Vec<models::SearchResult>) {
 
     for result in results.iter().take(results.len() - 1) {
         show_query_result(result.to_owned(), min_score, max_score);
-        println!("-----------------------------");
+        let size = termion::terminal_size().unwrap();
+        let width = size.0 as usize;
+        // print separator line
+        let separator = format!("{:-<width$}", "", width = width);
+        println!("{separator}");
     }
     show_query_result(results.last().unwrap().to_owned(), min_score, max_score);
 }
