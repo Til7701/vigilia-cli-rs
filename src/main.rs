@@ -3,6 +3,7 @@ mod models;
 mod index;
 mod query;
 mod vig_command;
+mod ui;
 
 use crate::apis::configuration::Configuration;
 use clap::{Parser, Subcommand};
@@ -35,7 +36,7 @@ fn main() {
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
-pub struct VigArgs {
+struct VigArgs {
     #[command(subcommand)]
     command: Option<VigSubCommands>,
 }
