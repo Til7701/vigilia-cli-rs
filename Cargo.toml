@@ -2,14 +2,23 @@
 name = "vigilia-cli"
 version = "0.1.0"
 edition = "2024"
+license-file = "LICENSE"
 
 [dependencies]
-clap = { version = "4.5.34", features = ["derive"] }#
+clap = { version = "4.5.34", features = ["cargo", "derive"] }#
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
-serde_repr = "^0.1"
 url = "^2.5"
 reqwest = { version = "^0.12", features = ["json", "multipart"] }
 tokio = { version = "1.44.1", features = ["rt-multi-thread"] }
 termion = "4.0.5"
 spinners = "4.1.1"
+
+[package.metadata.deb]
+maintainer = "Schlunzis <schlunzis@schlunzis.org>"
+copyright = "2025, Schlunzis"
+depends = ["vig-core", "$auto"]
+conflicts = ["vig"]
+assets = [
+    ["target/release/vigilia-cli", "usr/bin/vig", "755"],
+]
