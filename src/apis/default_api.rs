@@ -164,7 +164,7 @@ pub async fn search_files(configuration: &configuration::Configuration, body: &s
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
-    req_builder = req_builder.body(Body::from(body.to_owned()));
+    req_builder = req_builder.body(Body::from(p_body.to_owned()));
     req_builder = req_builder.header("Content-Type", "text/plain");
 
     let req = req_builder.build()?;
