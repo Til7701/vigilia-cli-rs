@@ -23,10 +23,27 @@ This will build the CLI and create an executable in the `target/debug` directory
 
 ## Run
 
-To run the CLI, you can use the following command:
+To build and run the CLI, you can use the following command:
 
 ```bash
 cargo run -- <args>
 ```
 
 Where `<args>` are the args to pass to the CLI.
+
+## Build DEB-Package
+
+To build a DEB package, you need to have `cargo-deb` installed.
+You can install it using the following command:
+
+```bash
+cargo install cargo-deb
+```
+
+Then, you can build the DEB package using the following command:
+
+```bash
+cargo deb
+```
+
+This will create a DEB package in the `target/debian` directory.
