@@ -1,7 +1,7 @@
 # Vigilia CLI
 
-Vigilia CLI is a command-line interface for the Vigilia toolbox.
-The service, which contains the logic for the Vigilia toolbox, is located [here](https://github.com/schlunzis/vigilia).
+Vigilia CLI is a command-line interface for the Vigilia service.
+The service, which contains the logic for the Vigilia service, is located [here](https://github.com/schlunzis/vigilia).
 
 ## Build
 
@@ -47,3 +47,14 @@ cargo deb
 ```
 
 This will create a DEB package in the `target/debian` directory.
+
+## Update API Implementation
+
+To update the API implementation, you need to run the `generate.sh` script.
+This script will generate the API implementation based on the OpenAPI document.
+The OpenAPI document is located in the `vigilia` repository with the service.
+
+After the generation review the generated code and make sure it is correct.
+
+> **Note:** Revert the changes setting the body of the request in `src/apis/default_api.rs` as the generated code
+> sends the body as a json not as text/plain.
